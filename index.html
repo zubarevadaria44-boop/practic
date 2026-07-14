@@ -133,6 +133,9 @@
   }
   .slot.correct{ border-color:var(--ok); background:#eaf0e0; color:var(--ok); }
   .slot.wrong{ border-color:var(--bad); background:#f6e2dc; color:var(--bad); }
+  .slot.space{
+    border:none; background:none; box-shadow:none; width:18px; cursor:default;
+  }
 
   .tray{
     display:flex; gap:10px; margin-top:28px; flex-wrap:wrap; justify-content:center;
@@ -266,6 +269,21 @@ const WORDS = [
   {word:'машина', emoji:'🚗', translation:'car'},
   {word:'корова', emoji:'🐄', translation:'cow'},
   {word:'собака', emoji:'🐶', translation:'dog'},
+  {word:'хочу', emoji:'🙋', translation:'I want'},
+  {word:'могу', emoji:'💪', translation:'I can'},
+  {word:'нужно', emoji:'❗', translation:'necessary'},
+  {word:'знаю', emoji:'🧠', translation:'I know'},
+  {word:'думаю', emoji:'🤔', translation:'I think'},
+  {word:'попробую', emoji:'🎯', translation:"I'll try"},
+  {word:'готов', emoji:'✅', translation:'ready'},
+  {word:'помощь', emoji:'🆘', translation:'help'},
+  {word:'работа', emoji:'💼', translation:'work'},
+  {word:'вопрос', emoji:'❓', translation:'question'},
+  {word:'проблема', emoji:'⚠️', translation:'problem'},
+  {word:'сегодня', emoji:'📅', translation:'today'},
+  {word:'завтра', emoji:'🌅', translation:'tomorrow'},
+  {word:'может быть', emoji:'🤷', translation:'maybe'},
+  {word:'потому что', emoji:'🔗', translation:'because'},
 ];
 
 const LETTER_NAMES = {
@@ -332,8 +350,9 @@ function loadWord(){
   locked = false;
   const w = WORDS[idx];
   const chars = w.word.split('');
-  slotsFilled = new Array(chars.length).fill(null);
-  tileOrder = shuffle(chars).map((c,i)=>({char:c, used:false, tileId:i}));
+  slotsFilled = chars.map(c => c===' ' ? {char:' ', isSpace:true} : null);
+  const letterChars = chars.filter(c => c !== ' ');
+  tileOrder = shuffle(letterChars).map((c,i)=>({char:c, used:false, tileId:i}));
 
   emojiBig.textContent = w.emoji;
   translation.textContent = w.translation.toUpperCase();
@@ -352,9 +371,14 @@ function renderSlots(){
   slotsEl.innerHTML = '';
   slotsFilled.forEach((s,i)=>{
     const el = document.createElement('div');
-    el.className = 'slot' + (s ? ' filled' : '');
-    el.textContent = s ? s.char : '';
-    el.addEventListener('click', ()=>{ removeSlot(i); });
+    if(s && s.isSpace){
+      el.className = 'slot space';
+      el.textContent = '';
+    } else {
+      el.className = 'slot' + (s ? ' filled' : '');
+      el.textContent = s ? s.char : '';
+      el.addEventListener('click', ()=>{ removeSlot(i); });
+    }
     slotsEl.appendChild(el);
   });
 }
@@ -388,7 +412,7 @@ function placeTile(t){
 function removeSlot(i){
   if(locked) return;
   const s = slotsFilled[i];
-  if(!s) return;
+  if(!s || s.isSpace) return;
   const tile = tileOrder.find(t=>t.tileId===s.tileId);
   if(tile) tile.used = false;
   slotsFilled[i] = null;
